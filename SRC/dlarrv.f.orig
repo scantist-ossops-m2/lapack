@@ -1,4 +1,4 @@
-*> \brief \b ZLARRV computes the eigenvectors of the tridiagonal matrix T = L D LT given L, D and the eigenvalues of L D LT.
+*> \brief \b DLARRV computes the eigenvectors of the tridiagonal matrix T = L D LT given L, D and the eigenvalues of L D LT.
 *
 *  =========== DOCUMENTATION ===========
 *
@@ -6,19 +6,19 @@
 *            http://www.netlib.org/lapack/explore-html/
 *
 *> \htmlonly
-*> Download ZLARRV + dependencies
-*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/zlarrv.f">
+*> Download DLARRV + dependencies
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlarrv.f">
 *> [TGZ]</a>
-*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/zlarrv.f">
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlarrv.f">
 *> [ZIP]</a>
-*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/zlarrv.f">
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlarrv.f">
 *> [TXT]</a>
 *> \endhtmlonly
 *
 *  Definition:
 *  ===========
 *
-*       SUBROUTINE ZLARRV( N, VL, VU, D, L, PIVMIN,
+*       SUBROUTINE DLARRV( N, VL, VU, D, L, PIVMIN,
 *                          ISPLIT, M, DOL, DOU, MINRGP,
 *                          RTOL1, RTOL2, W, WERR, WGAP,
 *                          IBLOCK, INDEXW, GERS, Z, LDZ, ISUPPZ,
@@ -33,7 +33,7 @@
 *      $                   ISUPPZ( * ), IWORK( * )
 *       DOUBLE PRECISION   D( * ), GERS( * ), L( * ), W( * ), WERR( * ),
 *      $                   WGAP( * ), WORK( * )
-*       COMPLEX*16        Z( LDZ, * )
+*       DOUBLE PRECISION  Z( LDZ, * )
 *       ..
 *
 *
@@ -42,7 +42,7 @@
 *>
 *> \verbatim
 *>
-*> ZLARRV computes the eigenvectors of the tridiagonal matrix
+*> DLARRV computes the eigenvectors of the tridiagonal matrix
 *> T = L D L**T given L, D and APPROXIMATIONS to the eigenvalues of L D L**T.
 *> The input eigenvalues should have been computed by DLARRE.
 *> \endverbatim
@@ -68,8 +68,14 @@
 *> \verbatim
 *>          VU is DOUBLE PRECISION
 *>          Upper bound of the interval that contains the desired
-*>          eigenvalues. VL < VU. Needed to compute gaps on the left or right
-*>          end of the extremal eigenvalues in the desired RANGE.
+*>          eigenvalues. VL < VU. 
+*>          Note: VU is currently not used by this implmentation of DLARRV, VU is
+*>          passed to DLARRV because it could be used compute gaps on the right end
+*>          of the extremal eigenvalues. However, with not much initial accuracy in
+*>          LAMBDA and VU, the formula can lead to an overestimation of the right gap
+*>          and thus to inadequately early RQI 'convergence'. This is currently
+*>          prevented this by forcing a small right gap. And so it turns out that VU
+*>          is currently not used by this implementation of DLARRV.
 *> \endverbatim
 *>
 *> \param[in,out] D
@@ -199,7 +205,7 @@
 *>
 *> \param[out] Z
 *> \verbatim
-*>          Z is COMPLEX*16 array, dimension (LDZ, max(1,M) )
+*>          Z is DOUBLE PRECISION array, dimension (LDZ, max(1,M) )
 *>          If INFO = 0, the first M columns of Z contain the
 *>          orthonormal eigenvectors of the matrix T
 *>          corresponding to the input eigenvalues, with the i-th
@@ -239,7 +245,7 @@
 *>          INFO is INTEGER
 *>          = 0:  successful exit
 *>
-*>          > 0:  A problem occurred in ZLARRV.
+*>          > 0:  A problem occurred in DLARRV.
 *>          < 0:  One of the called subroutines signaled an internal problem.
 *>                Needs inspection of the corresponding parameter IINFO
 *>                for further information.
@@ -268,7 +274,7 @@
 *
 *> \date June 2016
 *
-*> \ingroup complex16OTHERauxiliary
+*> \ingroup doubleOTHERauxiliary
 *
 *> \par Contributors:
 *  ==================
@@ -280,7 +286,7 @@
 *> Christof Voemel, University of California, Berkeley, USA
 *
 *  =====================================================================
-      SUBROUTINE ZLARRV( N, VL, VU, D, L, PIVMIN,
+      SUBROUTINE DLARRV( N, VL, VU, D, L, PIVMIN,
      $                   ISPLIT, M, DOL, DOU, MINRGP,
      $                   RTOL1, RTOL2, W, WERR, WGAP,
      $                   IBLOCK, INDEXW, GERS, Z, LDZ, ISUPPZ,
@@ -300,7 +306,7 @@
      $                   ISUPPZ( * ), IWORK( * )
       DOUBLE PRECISION   D( * ), GERS( * ), L( * ), W( * ), WERR( * ),
      $                   WGAP( * ), WORK( * )
-      COMPLEX*16        Z( LDZ, * )
+      DOUBLE PRECISION  Z( LDZ, * )
 *     ..
 *
 *  =====================================================================
@@ -308,8 +314,6 @@
 *     .. Parameters ..
       INTEGER            MAXITR
       PARAMETER          ( MAXITR = 10 )
-      COMPLEX*16         CZERO
-      PARAMETER          ( CZERO = ( 0.0D0, 0.0D0 ) )
       DOUBLE PRECISION   ZERO, ONE, TWO, THREE, FOUR, HALF
       PARAMETER          ( ZERO = 0.0D0, ONE = 1.0D0,
      $                     TWO = 2.0D0, THREE = 3.0D0,
@@ -326,7 +330,6 @@
      $                   OLDNCL, P, PARITY, Q, WBEGIN, WEND, WINDEX,
      $                   WINDMN, WINDPL, ZFROM, ZTO, ZUSEDL, ZUSEDU,
      $                   ZUSEDW
-      INTEGER            INDIN1, INDIN2
       DOUBLE PRECISION   BSTRES, BSTW, EPS, FUDGE, GAP, GAPTOL, GL, GU,
      $                   LAMBDA, LEFT, LGAP, MINGMA, NRMINV, RESID,
      $                   RGAP, RIGHT, RQCORR, RQTOL, SAVGAP, SGNDEF,
@@ -337,12 +340,11 @@
       EXTERNAL           DLAMCH
 *     ..
 *     .. External Subroutines ..
-      EXTERNAL           DCOPY, DLARRB, DLARRF, ZDSCAL, ZLAR1V,
-     $                   ZLASET
+      EXTERNAL           DCOPY, DLAR1V, DLARRB, DLARRF, DLASET,
+     $                   DSCAL
 *     ..
 *     .. Intrinsic Functions ..
       INTRINSIC ABS, DBLE, MAX, MIN
-      INTRINSIC DCMPLX
 *     ..
 *     .. Executable Statements ..
 *     ..
@@ -351,16 +353,14 @@
 *
 *     Quick return if possible
 *
-      IF( (N.LE.0).OR.(M.LE.0) ) THEN
+      IF( N.LE.0 ) THEN
          RETURN
       END IF
 *
 *     The first N entries of WORK are reserved for the eigenvalues
       INDLD = N+1
       INDLLD= 2*N+1
-      INDIN1 = 3*N + 1
-      INDIN2 = 4*N + 1
-      INDWRK = 5*N + 1
+      INDWRK= 3*N+1
       MINWSIZE = 12 * N
 
       DO 5 I= 1,MINWSIZE
@@ -395,7 +395,7 @@
       ZUSEDW = ZUSEDU - ZUSEDL + 1
 
 
-      CALL ZLASET( 'Full', N, ZUSEDW, CZERO, CZERO,
+      CALL DLASET( 'Full', N, ZUSEDW, ZERO, ZERO,
      $                    Z(1,ZUSEDL), LDZ )
 
       EPS = DLAMCH( 'Precision' )
@@ -464,7 +464,7 @@
 *        This is for a 1x1 block
          IF( IBEGIN.EQ.IEND ) THEN
             DONE = DONE+1
-            Z( IBEGIN, WBEGIN ) = DCMPLX( ONE, ZERO )
+            Z( IBEGIN, WBEGIN ) = ONE
             ISUPPZ( 2*WBEGIN-1 ) = IBEGIN
             ISUPPZ( 2*WBEGIN ) = IBEGIN
             W( WBEGIN ) = W( WBEGIN ) + SIGMA
@@ -556,17 +556,13 @@
                         J = WBEGIN + OLDFST - 1
                      ENDIF
                   ENDIF
-                  DO 45 K = 1, IN - 1
-                     D( IBEGIN+K-1 ) = DBLE( Z( IBEGIN+K-1,
-     $                                 J ) )
-                     L( IBEGIN+K-1 ) = DBLE( Z( IBEGIN+K-1,
-     $                                 J+1 ) )
-   45             CONTINUE
-                  D( IEND ) = DBLE( Z( IEND, J ) )
-                  SIGMA = DBLE( Z( IEND, J+1 ) )
+                  CALL DCOPY( IN, Z( IBEGIN, J ), 1, D( IBEGIN ), 1 )
+                  CALL DCOPY( IN-1, Z( IBEGIN, J+1 ), 1, L( IBEGIN ),
+     $               1 )
+                  SIGMA = Z( IEND, J+1 )
 
 *                 Set the corresponding entries in Z to zero
-                  CALL ZLASET( 'Full', IN, 2, CZERO, CZERO,
+                  CALL DLASET( 'Full', IN, 2, ZERO, ZERO,
      $                         Z( IBEGIN, J), LDZ )
                END IF
 
@@ -729,24 +725,13 @@
      $                         NEWFST, NEWLST, WORK(WBEGIN),
      $                         WGAP(WBEGIN), WERR(WBEGIN),
      $                         SPDIAM, LGAP, RGAP, PIVMIN, TAU,
-     $                         WORK( INDIN1 ), WORK( INDIN2 ),
+     $                         Z(IBEGIN, NEWFTT),Z(IBEGIN, NEWFTT+1),
      $                         WORK( INDWRK ), IINFO )
-*                    In the complex case, DLARRF cannot write
-*                    the new RRR directly into Z and needs an intermediate
-*                    workspace
-                     DO 56 K = 1, IN-1
-                        Z( IBEGIN+K-1, NEWFTT ) =
-     $                     DCMPLX( WORK( INDIN1+K-1 ), ZERO )
-                        Z( IBEGIN+K-1, NEWFTT+1 ) =
-     $                     DCMPLX( WORK( INDIN2+K-1 ), ZERO )
-   56                CONTINUE
-                     Z( IEND, NEWFTT ) =
-     $                  DCMPLX( WORK( INDIN1+IN-1 ), ZERO )
                      IF( IINFO.EQ.0 ) THEN
 *                       a new RRR for the cluster was found by DLARRF
 *                       update shift and store it
                         SSIGMA = SIGMA + TAU
-                        Z( IEND, NEWFTT+1 ) = DCMPLX( SSIGMA, ZERO )
+                        Z( IEND, NEWFTT+1 ) = SSIGMA
 *                       WORK() are the midpoints and WERR() the semi-width
 *                       Note that the entries in W are unchanged.
                         DO 116 K = NEWFST, NEWLST
@@ -881,7 +866,7 @@
                         IWORK( IINDR+WINDEX ) = 0
                      ENDIF
 *                    Given LAMBDA, compute the eigenvector.
-                     CALL ZLAR1V( IN, 1, IN, LAMBDA, D( IBEGIN ),
+                     CALL DLAR1V( IN, 1, IN, LAMBDA, D( IBEGIN ),
      $                    L( IBEGIN ), WORK(INDLD+IBEGIN-1),
      $                    WORK(INDLLD+IBEGIN-1),
      $                    PIVMIN, GAPTOL, Z( IBEGIN, WINDEX ),
@@ -981,7 +966,7 @@
                         ENDIF
                         IF (STP2II) THEN
 *                          improve error angle by second step
-                           CALL ZLAR1V( IN, 1, IN, LAMBDA,
+                           CALL DLAR1V( IN, 1, IN, LAMBDA,
      $                          D( IBEGIN ), L( IBEGIN ),
      $                          WORK(INDLD+IBEGIN-1),
      $                          WORK(INDLLD+IBEGIN-1),
@@ -1013,7 +998,7 @@
                            Z( II, WINDEX ) = ZERO
  123                    CONTINUE
                      ENDIF
-                     CALL ZDSCAL( ZTO-ZFROM+1, NRMINV,
+                     CALL DSCAL( ZTO-ZFROM+1, NRMINV,
      $                       Z( ZFROM, WINDEX ), 1 )
  125                 CONTINUE
 *                    Update W
@@ -1055,6 +1040,6 @@
 
       RETURN
 *
-*     End of ZLARRV
+*     End of DLARRV
 *
       END
